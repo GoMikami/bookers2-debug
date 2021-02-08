@@ -11,7 +11,7 @@ class User < ApplicationRecord
   has_many :follower_relationships, class_name: "Relationship", foreign_key: "followed_id", dependent: :destroy
   has_many :following, through: :following_relationships, source: :followed
   has_many :followers, through: :follower_relationships, source: :follower
-  
+  # フォロー・フォロワー機能
   def follow(user_id)
       following_relationships.create(followed_id: user_id)
   end
@@ -23,7 +23,7 @@ class User < ApplicationRecord
   def following?(user)
     following.include?(user)
   end
-  
+  # 検索機能
    def self.looks(search, words)
     if search == "perfect_match"
       @user = User.where("name LIKE ?", "#{words}")
@@ -34,6 +34,17 @@ class User < ApplicationRecord
     else
       @user = User.where("name LIKE ?", "%#{words}%")
     end
+  end
+  # 住所検索機能
+  include JpPrefecture
+  jp_prefecture :prefecture_code
+  
+  def prefecture_name
+    JpPrefecture::Prefecture.find(code: prefecture_code).try(:name)
+  end
+
+  def prefecture_name=(prefecture_name)
+    self.prefecture_code = JpPrefecture::Prefecture.find(name: prefecture_name).code
   end
   
   attachment :profile_image, destroy: false
